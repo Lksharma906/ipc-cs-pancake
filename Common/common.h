@@ -5,14 +5,15 @@
 #include<string.h>
 
 //Process Related
-#include<sys/ipc.h>
-#include<sys/types.h>
-#include<sys/shm.h>
-#include<sys/sem.h>
+#include<unistd.h>              //pipe
+#include<sys/ipc.h>             //ipc
+#include<sys/types.h>           //fifo
+#include<sys/shm.h>             //shared memory
+#include<sys/sem.h>             //semaphores
 
 //Thread Related
-#include<pthread.h>
-#include<semaphore.h>
+#include<pthread.h>             //threads
+#include<semaphore.h>           //POSIX Semaphores
 
 
 #ifndef DEBUG
