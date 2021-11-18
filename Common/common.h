@@ -8,8 +8,10 @@
 #include<unistd.h>              //pipe
 #include<sys/ipc.h>             //ipc
 #include<sys/types.h>           //fifo
+#include<sys/stat.h>
 #include<sys/shm.h>             //shared memory
 #include<sys/sem.h>             //semaphores
+#include<fcntl.h>
 
 //Thread Related
 #include<pthread.h>             //threads

@@ -11,7 +11,7 @@ void* CreateInfra(void* arg){
     
     INFRA *infra;
     infra = (INFRA*)arg;
-
+    void* Sem_shm_ptr;
     if(-1 == pipe(pipefds)){
         perror("pipe");
         funcp[FPS_EXIT]((void*)"failure");
@@ -89,8 +89,29 @@ void* CreateInfra(void* arg){
         #endif
     }
 
+    infra->sem_sh_key1 = shmget(SEM_SHM_KEY1,sizeof(sem_t),0666|IPC_CREAT);
+    if(infra->sem_sh_key1 == -1){
+        perror("sem Shmget error");
+        funcp[FPS_EXIT]((void*)"failure");
+    } else {
+        #ifdef DEBUG
+        printf("shared Memory for Semaphore created successfully");
+        #endif
+    }
+
+    
+    infra->sem_sh_key2 = shmget(SEM_SHM_KEY2,sizeof(sem_t),0666|IPC_CREAT);
+    if(infra->sem_sh_key2 == -1){
+        perror("sem Shmget error");
+        funcp[FPS_EXIT]((void*)"failure");
+    } else {
+        #ifdef DEBUG
+        printf("shared Memory for Semaphore created successfully");
+        #endif
+    }
 
 
+    infra = (INFRA*) funcp[FPS_THREAD]((void*)infra);
 
     
     #ifdef DEBUG

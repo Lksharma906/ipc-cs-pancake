@@ -6,24 +6,20 @@ void init(void);
 
 void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client 
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv)
 {
     #ifdef DEBUG
     printf("%s %s %d : Begin \n",__FILE__,__func__, __LINE__);
     #endif
 
-    long noofthreads = 4;//Default thread 4;
+    // long noofthreads = 4;//Default thread 4;
 
     //TODO Below logic need to be tested.
-    if(argc >= 1)
-        int noofthreads = (long) argv[1];
+    //if(argc >= 1)
+    //    int noofthreads = (long) argv[1];
 
-    
-
-
-
-
-
+   init(); 
+   funccp[FPC_THREAD]((void*)0);
 
 
 

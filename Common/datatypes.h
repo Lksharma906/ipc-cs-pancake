@@ -1,7 +1,7 @@
 #include"common.h"
 
 #ifndef FIFONAME
-#define FIFONAME "requestfifo"
+#define FIFONAME "../requestfifo"
 #endif
 
 typedef struct infrastructure_ {
@@ -10,6 +10,11 @@ typedef struct infrastructure_ {
     int mq_key;             //int msgget(key_t key, int msgflg);
     int sh_key;             //int shmget(key_t key, size_t size, int shmflg);
     int sem_key;            //int semget(key_t key, int nsems, int semflg);
+    
+    int sem_sh_key1;
+    int sem_sh_key2;
+
+    sem_t tsh_semaphore;
 
 }INFRA;
 
@@ -20,7 +25,8 @@ extern int pipefds[2];
 #ifndef NOFP_SERVER
 #define FPS_EXIT     0
 #define FPS_INFRA    1
-#define NOFP_SERVER        2//No of function pointers.
+#define FPS_THREAD   2
+#define NOFP_SERVER        3//No of function pointers.
 
 extern void* (*funcp[NOFP_SERVER])(void*);   // Function pointer for Server
 #endif
@@ -43,6 +49,11 @@ extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 
 #ifndef SHM_KEY
 #define SHM_KEY 2000
+#endif
+
+#ifndef SEM_SHM_KEY
+#define SEM_SHM_KEY1 2001
+#define SEM_SHM_KEY2 2002
 #endif
 
 #ifndef SEM_KEY 
@@ -69,9 +80,14 @@ typedef struct _client_request_data {
 extern CLIENT_REQUEST_DATA  crd;
 extern CLIENT_REQUEST_DATA  *pcrd;
 
-
-
-
+#define VR_CODE_NONE    0
+#define VR_CODE_ADD     1
+#define VR_CODE_SUB     2
+#define VR_CODE_MUL     3
+#define VR_CODE_DIV     4
+#define VR_CODE_MOD     5
+#define VR_CODE_FACT    6
+#define MAX_VR_CODE     7
 
 
 
