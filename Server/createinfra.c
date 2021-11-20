@@ -2,6 +2,8 @@
 #include"../Common/datatypes.h"
 #include"declarations.h"
 
+struct shmid_ds *shmid_ds_ptr;
+
 void* CreateInfra(void* arg){
 
 
@@ -113,7 +115,30 @@ void* CreateInfra(void* arg){
 
     infra = (INFRA*) funcp[FPS_THREAD]((void*)infra);
 
-    
+    int result = shmdt(infra->sem_sh_key1);
+    if(infra->sem_sh_key1 == -1){
+        perror("sem Shmdt 1 error");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+
+    result = shmdt(infra->sem_sh_key2);
+    if(infra->sem_sh_key2 == -1){
+        perror("sem Shmdt 2 error");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+
+    result = shmctl(infra->sem_sh_key1,IPC_RMID,shmid_ds_ptr);
+
+    if(result == -1){
+        perror("shmctl error");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+    result = shmctl(infra->sem_sh_key2,IPC_RMID,shmid_ds_ptr);
+
+    if(result == -1){
+        perror("sem Shmdt 2 error");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
     #ifdef DEBUG
     printf(" %s %s %d : End \n", __FILE__, __func__, __LINE__);
     #endif

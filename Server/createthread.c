@@ -25,14 +25,11 @@ void* Server_threads(void* arg){
     
     INFRA *infra;
     infra = (INFRA*)arg;
-
     
     Sem_shm_ptr1 = shmat(infra->sem_sh_key1,(void*)0,0);
-    
     Sem_shm_ptr2 = shmat(infra->sem_sh_key2,(void*)0,0);
+    
     int Sem_status;
-
-
     Sem_status = sem_init((sem_t*)Sem_shm_ptr1,1,0);
     if(Sem_status != 0){
         perror("Sem Init Failed");
@@ -81,26 +78,28 @@ void* Server_threads(void* arg){
 void* Thread_Function(void* arg){
 
     #ifdef DEBUG
-    printf("%s %s %d pid = %d: Begin \n",__FILE__,__func__, __LINE__,getpid());
+    printf("%s %s %d thread id = %d: Begin \n",__FILE__,__func__, __LINE__,pthread_self());
     #endif
 
     int fifo_fd;
     int result;
 
-    
-    sem_wait(&tsemaphore); 
-
-    printf("Local Sem Open : thread id %d \n",pthread_self());
     fifo_fd = open(FIFONAME,O_RDONLY);
     if(fifo_fd == -1){
         perror("fifo open error");
         funcp[FPS_EXIT]((void*)"failure");
     }
-    
-    
-    sem_wait((sem_t*)Sem_shm_ptr1);
-    
+    int sem_error; 
+    sem_error = sem_wait(&tsemaphore); 
+    if(sem_error != 0){
+        printf("SEM WAIT FAILED FOR LOCAL SEM_SERVER \n");
+    }
+    sem_error = sem_wait((sem_t*)Sem_shm_ptr1);    
+    if(sem_error != 0){
+        printf("SEM WAIT FAILED FOR SEM1_SERVER \n");
+    }
     printf("Shared Sem1 Wait Successfull : thread id %d \n",pthread_self());
+
     pcrd = (CLIENT_REQUEST_DATA*)malloc(sizeof(CLIENT_REQUEST_DATA));
     result = read(fifo_fd,pcrd,sizeof(CLIENT_REQUEST_DATA));
     if(result == -1)
@@ -110,21 +109,20 @@ void* Thread_Function(void* arg){
     }
     printf("Read Successfull from Client from thread id received = %d \n",pcrd->client_id);
     
-    sem_post((sem_t*)Sem_shm_ptr2);
-    
+    sem_error = sem_post((sem_t*)Sem_shm_ptr2);
+    if(sem_error != 0){
+        printf("SEM POST FAILED FOR SEM2_SERVER \n");
+    }
     printf("Shared Sem2 Post Successfull: thread id %d \n",pthread_self());
+    sem_error = sem_post(&tsemaphore);
+    if(sem_error != 0){
+        printf("SEM POST FAILED FOR LOCAL SEM _SERVER \n");
+    }
+
     close(fifo_fd);
-    
-    sem_post(&tsemaphore);
-
-
-    printf("Local Sem Post : thread id %d \n",pthread_self());
-
-    
-    
 
     #ifdef DEBUG
-    printf("%s %s %d pid = %d : End \n",__FILE__,__func__, __LINE__,getpid());
+    printf("%s %s %d thread id = %d : End \n",__FILE__,__func__, __LINE__,pthread_self());
     #endif
 
     pthread_exit((void*)"success");

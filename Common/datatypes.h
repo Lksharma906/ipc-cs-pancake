@@ -54,6 +54,7 @@ extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 #ifndef SEM_SHM_KEY
 #define SEM_SHM_KEY1 2001
 #define SEM_SHM_KEY2 2002
+#define SEM_SHM_KEY3 2003
 #endif
 
 #ifndef SEM_KEY 

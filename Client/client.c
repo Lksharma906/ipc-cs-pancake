@@ -9,7 +9,7 @@ void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 int main(int argc, char* argv)
 {
     #ifdef DEBUG
-    printf("%s %s %d : Begin \n",__FILE__,__func__, __LINE__);
+    printf("%s %s %d : Begin , pid = %d \n",__FILE__,__func__, __LINE__,getpid());
     #endif
 
     // long noofthreads = 4;//Default thread 4;
@@ -25,7 +25,7 @@ int main(int argc, char* argv)
 
 
     #ifdef DEBUG
-    printf("%s %s %d : End \n",__FILE__,__func__, __LINE__);
+    printf("%s %s %d : End pid = %d \n",__FILE__,__func__, __LINE__,getpid());
     #endif
 
     return 0;
