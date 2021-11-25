@@ -105,22 +105,25 @@ void* Thread_Function(void* arg){
     int fifo_fd;
     int result;  
     
-    fifo_fd = open(FIFONAME,O_WRONLY);
-    if(fifo_fd == -1){
-        perror("open fifo");
-        funccp[FPS_EXIT]((void*)"failure");
-    } 
     int sem_error;
-/*    sem_error = sem_wait((sem_t*)Sem_shm_ptr3);
-    if(sem_error != 0){
-        printf("SEM WAIT FAILED FOR SEM3_CLIENT \n");
-    }
-*/  sem_error = sem_wait((sem_t*)Sem_shm_ptr2);
+    sem_error = sem_wait((sem_t*)Sem_shm_ptr2);
     if(sem_error != 0){
         printf("SEM WAIT FAILED FOR SEM2_CLIENT \n");
     }
     
     printf("Shared Sem2 Wait Successfull: pid = %d \n",getpid());
+    fifo_fd = open(FIFONAME,O_WRONLY);
+    if(fifo_fd == -1){
+        perror("open fifo");
+        funccp[FPS_EXIT]((void*)"failure");
+    } 
+
+/*    sem_error = sem_wait((sem_t*)Sem_shm_ptr3);
+    if(sem_error != 0){
+        printf("SEM WAIT FAILED FOR SEM3_CLIENT \n");
+    }
+*/
+
     pcrd = (CLIENT_REQUEST_DATA*)malloc(sizeof(CLIENT_REQUEST_DATA));
     
     pcrd->client_id = pthread_self();
