@@ -114,6 +114,46 @@ void* Thread_Function(void* arg){
         printf("SEM POST FAILED FOR SEM2_SERVER \n");
     }
     printf("Shared Sem2 Post Successfull: thread id %d \n",pthread_self());
+
+
+    int forkedret = fork();
+    switch(forkedret)
+    {
+        case -1:
+            perror("fork:");
+            funcp[FPS_EXIT]((void*)"failure");
+            break;
+        case 0:
+            printf("Going to sleep as parent for 2 Seconds for now\n");
+            sleep(2);
+            break;
+        default:
+            switch(pcrd->vender_reuest)
+            {
+                case VR_CODE_ADD:
+                    execl("./Vender/adder","adder",(char*)0);
+                    break;
+                case VR_CODE_MUL:
+                    execl("./Vender/mul","mul",(char*)0);
+                    break;
+                case VR_CODE_DIV:
+                    execl("./Vender/div","div",(char*)0);
+                    break;
+                case VR_CODE_SUB:
+                    execl("./Vender/sub","sub",(char*)0);
+                    break;
+                case VR_CODE_MOD:
+                    execl("./Vender/mod","mod",(char*)0);
+                    break;
+                case VR_CODE_NONE: default:
+                    printf("Wrong Request Received \n");
+                    break;
+            }
+            break;    
+    }
+
+
+    sleep(2);
     sem_error = sem_post(&tsemaphore);
     if(sem_error != 0){
         printf("SEM POST FAILED FOR LOCAL SEM _SERVER \n");
