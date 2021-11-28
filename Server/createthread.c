@@ -50,7 +50,7 @@ void* Server_threads(void* arg){
     }
 
     for(int i =0; i<5; i++){
-        result = pthread_create(&thread_id[i],NULL,&Thread_Function,NULL);
+        result = pthread_create(&thread_id[i],NULL,&Thread_Function,arg);
         if(result != 0){
             perror("pthread_create");
             funcp[FPS_EXIT]((void*)"failure");
@@ -84,6 +84,9 @@ void* Thread_Function(void* arg){
     int fifo_fd;
     int result;
 
+    INFRA *infra;
+    infra = (INFRA*)arg;
+
     fifo_fd = open(FIFONAME,O_RDONLY);
     if(fifo_fd == -1){
         perror("fifo open error");
@@ -115,7 +118,6 @@ void* Thread_Function(void* arg){
     }
     printf("Shared Sem2 Post Successfull: thread id %d \n",pthread_self());
 
-
     int forkedret = fork();
     switch(forkedret)
     {
@@ -123,42 +125,55 @@ void* Thread_Function(void* arg){
             perror("fork:");
             funcp[FPS_EXIT]((void*)"failure");
             break;
+        
         case 0:
-            printf("Going to sleep as parent for 2 Seconds for now\n");
-            sleep(2);
-            break;
-        default:
             switch(pcrd->vender_reuest)
             {
                 case VR_CODE_ADD:
-                    execl("./Vender/adder","adder",(char*)0);
+                    printf("Going to Vender adder for Processing \n");
+                    execl("./Vender/adder/adderV","adderV",*((int*)(infra->pipe)+1),(char*)0);
                     break;
                 case VR_CODE_MUL:
-                    execl("./Vender/mul","mul",(char*)0);
+                    printf("Going to Vender multiplier for Processing \n");
+                    execl("./Vender/mul/mulV","mulV",*((int*)(infra->pipe)+1),(char*)0);
                     break;
                 case VR_CODE_DIV:
-                    execl("./Vender/div","div",(char*)0);
+                    printf("Going to Vender divider for Processing \n");
+                    execl("./Vender/div/divV","div/divV",*((int*)(infra->pipe)+1),(char*)0);
                     break;
                 case VR_CODE_SUB:
-                    execl("./Vender/sub","sub",(char*)0);
+                    printf("Going to Vender substractor for Processing \n");
+                    execl("./Vender/sub/subV","subV",*((int*)(infra->pipe)+1),(char*)0);
                     break;
                 case VR_CODE_MOD:
-                    execl("./Vender/mod","mod",(char*)0);
+                    printf("Going to Vender moduler for Processing \n");
+                    execl("./Vender/mod/modV","modV",*((int*)(infra->pipe)+1),(char*)0);
                     break;
                 case VR_CODE_NONE: default:
+                    printf("Going to Vender NONE for Processing \n");
                     printf("Wrong Request Received \n");
                     break;
             }
+            break;
+
+        default:
+            int ret = write(*((int*)(infra->pipe)),pcrd,sizeof(CLIENT_REQUEST_DATA));
+            if(ret == -1){
+                perror("pipe write:");
+                funcp[FPS_EXIT]((void*)"failure");
+            }
+            else
+                printf("Wrote Client request to pipe\n");
+            printf("Going to sleep as parent for 2 Seconds for now\n");
+            sleep(2);
             break;    
     }
 
-
-    sleep(2);
     sem_error = sem_post(&tsemaphore);
     if(sem_error != 0){
         printf("SEM POST FAILED FOR LOCAL SEM _SERVER \n");
     }
-
+    
     close(fifo_fd);
 
     #ifdef DEBUG

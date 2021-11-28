@@ -14,6 +14,7 @@ void* CreateInfra(void* arg){
     INFRA *infra;
     infra = (INFRA*)arg;
     void* Sem_shm_ptr;
+    
     if(-1 == pipe(pipefds)){
         perror("pipe");
         funcp[FPS_EXIT]((void*)"failure");
