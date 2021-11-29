@@ -18,7 +18,6 @@ int main(int argc, char* argv)
     #endif
 
     init_infra();
-    
     pInfra = (INFRA*) funcp[FPS_INFRA]((void*) pInfra);
 
     #ifdef DEBUG
@@ -30,15 +29,9 @@ int main(int argc, char* argv)
 }
 
 void init_infra(void)
-{    
+{
     funcp[FPS_EXIT] = Exit_Func;
     funcp[FPS_INFRA] = CreateInfra;
     funcp[FPS_THREAD] = Server_threads;
     printf("Infrastructure Initialized \n");
 }
-
-
-
-
-
-
