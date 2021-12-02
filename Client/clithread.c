@@ -2,7 +2,7 @@
 #include"../Common/datatypes.h"
 #include"declarations.h"
 
-CLIENT_REQUEST_DATA  *pcrd;
+
 void* Sem_shm_ptr1;
 void* Sem_shm_ptr2;
 void* Sem_shm_ptr3;
@@ -63,7 +63,7 @@ void* Client_threads(void* arg){
         funccp[FPC_EXIT]((void*)"failure");
     }
 */    
-    result = pthread_create(&thread_id,NULL,&Thread_Function,NULL);
+    result = pthread_create(&thread_id,NULL,&Thread_Function,arg);
     if(result!= 0){
         perror("pthread_create");
         funccp[FPC_EXIT]((void*)"failure");
@@ -106,6 +106,10 @@ void* Thread_Function(void* arg){
     int result;  
     
     int sem_error;
+
+    CLIENT_REQUEST_DATA  *pcrd = (CLIENT_REQUEST_DATA*)arg;
+    pcrd->client_id = pthread_self();
+
     sem_error = sem_wait((sem_t*)Sem_shm_ptr2);
     if(sem_error != 0){
         printf("SEM WAIT FAILED FOR SEM2_CLIENT \n");
@@ -123,13 +127,6 @@ void* Thread_Function(void* arg){
         printf("SEM WAIT FAILED FOR SEM3_CLIENT \n");
     }
 */
-
-    pcrd = (CLIENT_REQUEST_DATA*)malloc(sizeof(CLIENT_REQUEST_DATA));
-    
-    pcrd->client_id = pthread_self();
-    pcrd->operand1 = 2;
-    pcrd->operand2 = 4;
-    pcrd->vender_reuest = VR_CODE_ADD;
 
     result = write(fifo_fd,pcrd,sizeof(CLIENT_REQUEST_DATA));
     if(result == -1){

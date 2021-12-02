@@ -10,21 +10,24 @@ void* CreateInfra(void* arg){
     #ifdef DEBUG
     printf(" %s %s %d : Begin \n", __FILE__, __func__, __LINE__);
     #endif
-    
+
     INFRA *infra;
     infra = (INFRA*)arg;
     void* Sem_shm_ptr;
+
     if(-1 == pipe(pipefds)){
         perror("pipe");
         funcp[FPS_EXIT]((void*)"failure");
     }
     else{
-        infra->pipe = &pipefds;
-        
+        infra->pipefdR = &pipefds[0];
+        infra->pipefdW = &pipefds[1];
+
         #ifdef DEBUG
+        printf("pipefd 0  is %d & pipefd 1 is %d \n",pipefds[0],pipefds[1]);
         printf("Pipe Creation Successfull Infra has access to pipe fd's \n");
         #endif
-    }        
+    }
 
 
     /* Values for the second argument to access.
@@ -78,7 +81,7 @@ void* CreateInfra(void* arg){
         printf("shared Memory created successfully \n");
         #endif
     }
- 
+
     infra->sem_key= semget(SEM_KEY,NUM_SEM,0666|IPC_CREAT);
     if(infra->sem_key == -1){
             perror("semget");
@@ -101,7 +104,7 @@ void* CreateInfra(void* arg){
         #endif
     }
 
-    
+
     infra->sem_sh_key2 = shmget(SEM_SHM_KEY2,sizeof(sem_t),0666|IPC_CREAT);
     if(infra->sem_sh_key2 == -1){
         perror("sem Shmget error");
@@ -114,6 +117,8 @@ void* CreateInfra(void* arg){
 
 
     infra = (INFRA*) funcp[FPS_THREAD]((void*)infra);
+
+
 
     int result = shmdt(infra->sem_sh_key1);
     if(infra->sem_sh_key1 == -1){
@@ -145,13 +150,3 @@ void* CreateInfra(void* arg){
 
     return ((void*)infra);
 }
-
-
-
-
-
-
-
-
-
-

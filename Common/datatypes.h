@@ -5,12 +5,13 @@
 #endif
 
 typedef struct infrastructure_ {
-    int* pipe;
-    char* fifo_name;        //int mkfifo(const char *pathname, mode_t mode); 
+    int* pipefdR;
+    int* pipefdW;
+    char* fifo_name;        //int mkfifo(const char *pathname, mode_t mode);
     int mq_key;             //int msgget(key_t key, int msgflg);
     int sh_key;             //int shmget(key_t key, size_t size, int shmflg);
     int sem_key;            //int semget(key_t key, int nsems, int semflg);
-    
+
     int sem_sh_key1;
     int sem_sh_key2;
 
@@ -37,7 +38,7 @@ extern void* (*funcp[NOFP_SERVER])(void*);   // Function pointer for Server
 #define FPC_THREAD    1
 #define NOFP_CLIENT        2//No of function pointers.
 
-extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client 
+extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 #endif
 
 
@@ -57,7 +58,7 @@ extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 #define SEM_SHM_KEY3 2003
 #endif
 
-#ifndef SEM_KEY 
+#ifndef SEM_KEY
 #define SEM_KEY 3000
 #define NUM_SEM 2
 #endif
@@ -89,27 +90,3 @@ extern CLIENT_REQUEST_DATA  *pcrd;
 #define VR_CODE_MOD     5
 #define VR_CODE_FACT    6
 #define MAX_VR_CODE     7
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
