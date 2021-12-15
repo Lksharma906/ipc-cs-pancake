@@ -108,7 +108,7 @@ void* Thread_Function(void* arg){
     int sem_error;
 
     CLIENT_REQUEST_DATA  *pcrd = (CLIENT_REQUEST_DATA*)arg;
-    pcrd->client_id = pthread_self();
+    pcrd->client_id = getpid();
 
     sem_error = sem_wait((sem_t*)Sem_shm_ptr2);
     if(sem_error != 0){
@@ -146,7 +146,37 @@ void* Thread_Function(void* arg){
     }
 */
     close(fifo_fd);
+
+    int mq_key;
+    mq_key = msgget(MQ_KEY,0666|IPC_CREAT);
+    if(mq_key == -1)
+    {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+    struct mesgbuffer {
+        long messagetype;
+        SHM_VENDER_RESULT messr;
+    } message;
     
+    int msg_not_received = 1;
+    while(msg_not_received)
+    {
+        if(msgrcv(mq_key,&message,sizeof(message),getpid(),0) == -1)
+        {
+            perror("msgrcv:");
+            exit(EXIT_FAILURE);
+        }
+
+        if(message.messagetype == getpid())
+        {
+            printf("Result received is %d\n",message.messr.result_processed);
+            msg_not_received = 0;
+        }
+    }
+
+
+
     #ifdef DEBUG
     printf("%s %s %d : End \n",__FILE__,__func__, __LINE__);
     #endif

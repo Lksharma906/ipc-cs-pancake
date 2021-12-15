@@ -25,15 +25,15 @@ int main(int argc, char* argv[])
         pcrd->operand1 = atoi(argv[1]);
         pcrd->operand2 = atoi(argv[2]);
         
-        if(strncmp("+",argv[3],1) == 0)
+        if(strncmp("ADD",argv[3],1) == 0)
             pcrd->vender_reuest = VR_CODE_ADD;
-        else if(strncmp("-",argv[3],1) == 0)
+        else if(strncmp("SUB",argv[3],1) == 0)
             pcrd->vender_reuest = VR_CODE_SUB;
-        else if(strncmp("*",argv[3],1) == 0)
+        else if(strncmp("MUL",argv[3],1) == 0)
             pcrd->vender_reuest = VR_CODE_MUL;
-        else if(strncmp("/",argv[3],1) == 0)
+        else if(strncmp("DIV",argv[3],1) == 0)
             pcrd->vender_reuest = VR_CODE_DIV;
-        else if(strncmp("%",argv[3],1) == 0)
+        else if(strncmp("MOD",argv[3],1) == 0)
             pcrd->vender_reuest = VR_CODE_MOD;
         else 
             pcrd->vender_reuest = VR_CODE_NONE;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     printf("%s %s %d : End pid = %d \n",__FILE__,__func__, __LINE__,getpid());
     #endif
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }
 
 

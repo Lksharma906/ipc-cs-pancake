@@ -7,11 +7,35 @@ CLIENT_REQUEST_DATA *pcrd;
 void* Server_threads(void* arg);
 
 void* Thread_Function(void* arg);
+void* Thread_Joiner_func(void* arg);
+void* Thread_creater_func(void* arg);
 
 sem_t tsemaphore;
 void* Sem_shm_ptr1;
 void* Sem_shm_ptr2;
+struct sembuf sb1,sb2;
+int thread_number;
+int threadtobecreated = 1;
 
+typedef struct _threaddetails{
+bool thread_created_flag;
+pthread_t thread_id;
+pthread_attr_t tattr;
+void* thread_result;
+}threadproperties;
+
+threadproperties tp[MAX_THREADS];
+
+size_t size = PTHREAD_STACK_MIN/64;
+int nothcreated = 0;
+int nothpending = MAX_THREADS;
+int nothjoined = 0;
+int nothjoinpending = MAX_THREADS;
+int nothprocessed = 0;
+
+void signalProcessor(int signum){
+    wait(NULL);
+}
 void* Server_threads(void* arg){
 
 
@@ -19,7 +43,12 @@ void* Server_threads(void* arg){
     printf("%s %s %d : Begin \n",__FILE__,__func__, __LINE__);
     #endif
 
-    pthread_t thread_id[5];
+    pthread_t creator_thread_id;
+    pthread_t joiner_thread_id;
+
+
+    int ret = 0;
+
     int result = 0;
     void* thread_result;
 
@@ -49,22 +78,51 @@ void* Server_threads(void* arg){
         funcp[FPS_EXIT]((void*)"failure");
     }
 
-    for(int i =0; i<5; i++){
-        result = pthread_create(&thread_id[i],NULL,&Thread_Function,arg);
+
+    result = pthread_create(&creator_thread_id,NULL,&Thread_creater_func,arg);
+    if(result != 0){
+        perror("pthread_create");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+    result = pthread_create(&joiner_thread_id,NULL,&Thread_Joiner_func,arg);
+    if(result != 0){
+        perror("pthread_create");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+    result = pthread_join(creator_thread_id,&thread_result);
+    if(result != 0){
+        perror("pthread_join");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+    result = pthread_join(joiner_thread_id,&thread_result);
+    if(result != 0){
+        perror("pthread_join");
+        funcp[FPS_EXIT]((void*)"failure");
+    }
+
+
+
+
+/*    for(int i =0; i<MAX_THREADS; i++){    
+        // initialized with default attributes
+        ret = pthread_attr_init(&tattr);
+        // setting the size of the stack also 
+        ret = pthread_attr_setstacksize(&tattr, size);
+        result = pthread_create(&thread_id[i],&tattr,&Thread_Function,arg);
         if(result != 0){
             perror("pthread_create");
             funcp[FPS_EXIT]((void*)"failure");
         }
     }
 
-    for(int i =0; i<5; i++){
+    for(int i =0; i<MAX_THREADS; i++){
         result = pthread_join(thread_id[i],&thread_result);
         if(result != 0){
             perror("pthread_join");
             funcp[FPS_EXIT]((void*)"failure");
         }
     }
-
+*/
     #ifdef DEBUG
     printf("%s %s %d : End \n",__FILE__,__func__, __LINE__);
     #endif
@@ -74,11 +132,78 @@ void* Server_threads(void* arg){
 
 }
 
+void* Thread_creater_func(void* arg){
+
+#ifdef DEBUG
+    printf("Begin: %s",__func__);
+#endif
+    int ret,result;
+    while(nothpending)
+    {
+        if(nothcreated <= (5000 + nothprocessed)){
+            //create threads
+            // initialized with default attributes
+            ret = pthread_attr_init(&tp[nothcreated].tattr);
+            // setting the size of the stack also 
+            ret = pthread_attr_setstacksize(&tp[nothcreated].tattr, size);
+            result = pthread_create(&tp[nothcreated].thread_id,&tp[nothcreated].tattr,&Thread_Function,arg);
+            if(result != 0){
+                perror("pthread_create");
+                funcp[FPS_EXIT]((void*)"failure");
+            }
+            else{
+                nothcreated++;
+                nothpending--;
+            }
+                
+        }
+    }
+
+#ifdef DEBUG
+    printf("End: %s",__func__);
+#endif
+    pthread_exit("success");
+
+}
+
+void * Thread_Joiner_func(void* arg){
+
+#ifdef DEBUG
+    printf("Begin: %s",__func__);
+#endif
+
+int result;
+while(nothjoinpending)
+{
+    if(nothcreated > nothjoined)
+    {
+        result = pthread_join(tp[nothjoined].thread_id,&tp[nothjoined].thread_result);
+        if(result != 0){
+            perror("pthread_join");
+            funcp[FPS_EXIT]((void*)"failure");
+        }
+        else{
+            nothjoined++;
+            nothjoinpending--;
+            if(strncmp(&tp[nothjoined].thread_result,"success",7) == 0)
+            {
+                nothprocessed++;
+            }
+        }
+    }
+}
+
+#ifdef DEBUG
+    printf("End: %s",__func__);
+#endif
+    pthread_exit("success");
+}
 
 void* Thread_Function(void* arg){
 
+    thread_number += 1;
     #ifdef DEBUG
-    printf("%s %s %d thread id = %d: Begin \n",__FILE__,__func__, __LINE__,pthread_self());
+    printf("%s %s %d thread id = %d: Begin Thread No = %d\n",__FILE__,__func__, __LINE__,pthread_self(),thread_number);
     #endif
 
     int fifo_fd;
@@ -122,6 +247,14 @@ void* Thread_Function(void* arg){
 
 
     int forkedret = fork();
+
+    sb1.sem_num = SEM_1_SERVER_VENDER;
+    sb1.sem_op = 1;
+    sb1.sem_flg = SEM_UNDO;
+    
+    sb2.sem_num = SEM_2_SERVER_VENDER;
+    sb2.sem_op = -1;
+    sb2.sem_flg = SEM_UNDO;
     switch(forkedret)
     {
         case -1:
@@ -156,27 +289,68 @@ void* Thread_Function(void* arg){
                 case VR_CODE_NONE: default:
                     printf("Going to Vender NONE for Processing \n");
                     printf("Wrong Request Received \n");
+                    exit(EXIT_FAILURE);
                     break;
             }
             break;
 
         default:
-            //sprintf(sprfd,"%d",*(infra->pipe + 0));
-            int fd = *(infra->pipefdW);
-            printf("fd before write is %d\n",fd);
+            signal(SIGCHLD,signalProcessor);
+            if(pcrd->vender_reuest > VR_CODE_NONE && pcrd->vender_reuest < MAX_VR_CODE)
+            {
+                int fd = *(infra->pipefdW);
+                printf("fd before write is %d\n",fd);
 
-            int ret = write(fd,pcrd,sizeof(CLIENT_REQUEST_DATA));
-            if(ret == -1){
-                perror("pipe write:");
-                funcp[FPS_EXIT]((void*)"failure");
+                int ret = write(fd,pcrd,sizeof(CLIENT_REQUEST_DATA));
+                if(ret == -1){
+                    perror("pipe write:");
+                    funcp[FPS_EXIT]((void*)"failure");
+                }
+                else{
+                  printf("Wrote Client request to pipe\n");
+                }
+
+                void* Sh_ptr;
+                SHM_VENDER_RESULT* svr;
+
+                struct mesgbuffer {
+                    long messagetype;
+                    SHM_VENDER_RESULT messr;
+                } message;
+	        
+
+                if(semop(infra->sem_key,&sb2,1) == -1)  //SEM 2 WAIT OPERATION
+                {
+                    perror("semop:");
+                    funcp[FPS_EXIT]((void*)"failure");
+                }
+
+                //Read From Shared Memory and Forward to desired Message Queue.
+    	        Sh_ptr = shmat(infra->sh_key,(void*)0,0); //Ataching to shared memory.
+    	        svr = (SHM_VENDER_RESULT*)Sh_ptr;
+            
+                printf("recevied data clientid = %d,venderid =%d, processed result = %d \n",svr->client_id,svr->vender_id,svr->result_processed);
+
+                message.messagetype = svr->client_id;
+                memcpy(&message.messr,svr,sizeof(SHM_VENDER_RESULT));
+                if(msgsnd(infra->mq_key,&message,sizeof(message),0) == -1)
+                {
+                    perror("msgsnd:");
+                    funcp[FPS_EXIT]((void*)"failure");
+                }
+                
+
+                if(shmdt(Sh_ptr) == -1){
+                    perror("shmdt:");
+                }
+                if(semop(infra->sem_key,&sb1,1) == -1)  //SEM 1 POST OPERATION
+                {
+                    perror("semop:");
+                    funcp[FPS_EXIT]((void*)"failure");
+                }  
             }
-            else{
-              printf("Wrote Client request to pipe\n");
-            }
 
 
-            printf("Going to sleep as parent for 2 Seconds for now\n");
-            sleep(2);
             break;
     }
 

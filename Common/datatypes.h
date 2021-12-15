@@ -23,6 +23,8 @@ extern INFRA *pInfra;
 extern int pipefds[2];
 
 
+#define MAX_THREADS 100000
+#define INITIAL_THREADS 5000
 #ifndef NOFP_SERVER
 #define FPS_EXIT     0
 #define FPS_INFRA    1
@@ -60,6 +62,8 @@ extern void* (*funccp[NOFP_CLIENT])(void*); // Function pointer for client
 
 #ifndef SEM_KEY
 #define SEM_KEY 3000
+#define SEM_1_SERVER_VENDER     0
+#define SEM_2_SERVER_VENDER     1
 #define NUM_SEM 2
 #endif
 
@@ -90,3 +94,14 @@ extern CLIENT_REQUEST_DATA  *pcrd;
 #define VR_CODE_MOD     5
 #define VR_CODE_FACT    6
 #define MAX_VR_CODE     7
+
+
+typedef union semun {
+    int              val;    /* Value for SETVAL */
+    struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
+    unsigned short  *array;  /* Array for GETALL, SETALL */
+    struct seminfo  *__buf;  /* Buffer for IPC_INFO
+                            (Linux-specific) */
+}SEM_UNION;
+
+extern SEM_UNION sunion[NUM_SEM];

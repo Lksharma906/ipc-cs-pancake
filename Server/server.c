@@ -24,7 +24,7 @@ int main(int argc, char* argv)
     printf(" %s %s %d : End \n", __FILE__, __func__, __LINE__);
     #endif
 
-
+    exit(EXIT_SUCCESS);
 
 }
 

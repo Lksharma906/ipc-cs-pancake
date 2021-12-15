@@ -12,6 +12,9 @@
 #include<sys/shm.h>             //shared memory
 #include<sys/sem.h>             //semaphores
 #include<fcntl.h>
+#include<limits.h>
+#include<stdbool.h>
+#include<signal.h>
 
 //Thread Related
 #include<pthread.h>             //threads
